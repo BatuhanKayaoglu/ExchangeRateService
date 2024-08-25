@@ -6,7 +6,7 @@ from ExchangeRateScraping import sendToQueue
 
 def callback(ch, method, properties, body):
      message = json.loads(body)
-     datas=fetchCurrencyData("https://xn--dviz-5qa.com/",message['ExchangeType'])    
+     datas=fetchCurrencyData("https://xn--dviz-5qa.com/",message['ExchangeType'],message['Id'],message['Price'])    
      print(datas)   
 
 def consume_from_queue(queue_name, amqp_url):

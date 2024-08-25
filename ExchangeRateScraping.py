@@ -7,7 +7,7 @@ url = "https://xn--dviz-5qa.com/"
 rabbitmq_url = "amqps://yjmbpqsn:omJw2L1EuhX1D2JVvfneg_ZC8W1mqkBz@fish.rmq.cloudamqp.com/yjmbpqsn"
 queue_name = 'instant_currency_rate_queue'
 
-def fetchCurrencyData(url, currency_name=None):
+def fetchCurrencyData(url, currency_name=None,Id=None,Price=None):  
     try:
         response = requests.get(url)
         response.raise_for_status()
@@ -27,16 +27,18 @@ def fetchCurrencyData(url, currency_name=None):
 
     for row in rows:
         cols = row.find_all('td')
-        currency = cols[1].text.strip()
+        currency = cols[1].text.strip().capitalize()    
 
-        if currency ==currency_name:
-            buy_price = cols[2].text.strip()
-            sell_price = cols[3].text.strip()
+        if currency==currency_name: 
+            buy_price = cols[2].text.strip().replace(',', '.')
+            sell_price = cols[3].text.strip().replace(',', '.')
 
             currentlyDict = {
             'Currency': currency,
             'BuyPrice': buy_price,
-            'SellPrice': sell_price
+            'SellPrice': sell_price,
+            'Id': Id,   
+            'Price': Price
                 }
         
             sendToQueue(currentlyDict, rabbitmq_url, queue_name)    
@@ -52,7 +54,7 @@ def sendToQueue(data, rabbitmq_url, queue_name):
         connection = pika.BlockingConnection(pika.URLParameters(rabbitmq_url))
         channel = connection.channel()
 
-        channel.queue_declare(queue=queue_name, durable=True)
+        channel.queue_declare(queue=queue_name, durable=False)
 
         message = json.dumps(data)
         channel.basic_publish(
